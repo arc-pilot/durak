@@ -1,6 +1,6 @@
 LDFLAGS = -O2
 all:
-	$(CC) $(LDFLAGS) -o durak `find . -name *.c`
+	$(CC) $(LDFLAGS) -o durak durak.c
 
 clean:
 	rm durak
