@@ -26,19 +26,31 @@ struct Player {
 
 int get_adv(void);
 int set_adv(struct Stack*);
+
 int get_value_offset(void);
-void stack_delete(struct Stack*);
+
 struct Stack* get_cards(int);
+
 void push_card(struct Player*, struct Stack*);
 void pop_card(struct Player*, struct Stack*);
+
 void shuffle(struct Card**, int);
+
 struct Stack* comp(struct Stack*, struct Stack*);
 struct Stack* human(struct Stack*, struct Stack*);
+
 struct Card* deck_init(int);
+void deck_clear(struct Card*);
+
 struct Stack* stack_init(struct Card*, int);
+void stack_clear(struct Stack*);
+
 struct Player* players_init(int, int, struct Stack* (*[])(struct Stack*, struct Stack*), char**);
-void players_free(struct Player*, int);
+void players_clear(struct Player*, int);
+
 struct Player** turn_init(struct Player*, int);
+void turn_clear(struct Player**);
+
 struct Stack* turn(struct Player*, struct Stack*);
 void print_stack(struct Player*, struct Stack*);
 
@@ -61,11 +73,6 @@ int set_adv(struct Stack* base) {
 int get_value_offset(void) {
 	extern int value_offset;
 	return value_offset;
-}
-
-void stack_delete(struct Stack* stk) {
-	free(stk->card);
-	free(stk);
 }
 
 struct Stack* get_cards(int size) {
@@ -219,6 +226,10 @@ struct Card* deck_init(int len) {
 	return deck;
 }
 
+void deck_clear(struct Card* deck) {
+	free(deck);
+}
+
 struct Stack* stack_init(struct Card* deck, int len) {
 	struct Stack* stk = (struct Stack*) malloc(sizeof(struct Stack));
 	stk->card = (struct Card**) malloc(len * sizeof(struct Card*));
@@ -226,6 +237,11 @@ struct Stack* stack_init(struct Card* deck, int len) {
 	for(int i = 0; i < len; i++)
 		stk->card[i] = deck + i;
 	return stk;
+}
+
+void stack_clear(struct Stack* deck) {
+	free(deck->card);
+	free(deck);
 }
 
 struct Player* players_init(int num, int len, struct Stack* (*ai[])(struct Stack*, struct Stack*), char** names) {
@@ -237,14 +253,15 @@ struct Player* players_init(int num, int len, struct Stack* (*ai[])(struct Stack
 		players[i].play = *ai;
 		struct Stack* stk = get_cards(6);
 		push_card(players + i, stk);
-		stack_delete(stk);
+		stack_clear(stk);
 	}
 	return players;
 }
 
-void players_free(struct Player* players, int num) {
-	for(int i = 0; i < num; i++)
+void players_clear(struct Player* players, int num) {
+	for(int i = 0; i < num; i++) {
 		free(players[i].pack.card);
+	}
 	free(players);
 }
 
@@ -280,6 +297,10 @@ struct Player** turn_init(struct Player* pls, int pl_num) {
 	}
 
 	return turn;
+}
+
+void turn_clear(struct Player** turn) {
+	free(turn);
 }
 
 struct Stack* turn(struct Player* pl, struct Stack* enemy) {
@@ -350,7 +371,7 @@ int main (int argc, char* argv[]) {
 				}
 				if(slice != NULL) {
 					push_card(turn_queue[i], slice);
-					stack_delete(slice);
+					stack_clear(slice);
 				}
 				else {
 					if(turn_queue[i]->pack.length == 0) {
@@ -377,21 +398,21 @@ int main (int argc, char* argv[]) {
 				}
 				if(slice != NULL) {
 					push_card(turn_queue[i], slice);
-					stack_delete(slice);
+					stack_clear(slice);
 				} else {
 					if(turn_queue[i]->pack.length == 0) {
 						turn_queue[i] = NULL;
 						active_players--;
 					}
 				}
-				stack_delete(table);
-				stack_delete(temp);
+				stack_clear(table);
+				stack_clear(temp);
 				table = NULL;
 			}
 			else {
 				print_stack(turn_queue[i], table);
 				push_card(turn_queue[i], temp);
-				stack_delete(temp);
+				stack_clear(temp);
 				i++;
 				i = i % players_num;
 				if(active_players == 1) {
@@ -414,10 +435,10 @@ int main (int argc, char* argv[]) {
 		}
 	}
 	
-	players_free(players, players_num);
-	free(turn_queue);
-	stack_delete(base_stack);
-	free(base_deck);
+	players_clear(players, players_num);
+	turn_clear(turn_queue);
+	stack_clear(base_stack);
+	deck_clear(base_deck);
 
 	return 0;
 }
